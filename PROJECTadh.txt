@@ -1,0 +1,757 @@
+#include <iostream>
+#include <vector>
+#include <string>   // getline
+#include <cctype> // for isaplha
+#include <limits>   // clear strings in int
+using namespace std;
+
+int CustomerInput();
+
+void clearScreen()
+{
+   cout << "\033[2J\033[3J\033[1;1H";   // ASNI CODE
+}
+
+struct BigBoss
+{
+    int passwordLog;
+    int intention;
+    string userLog;
+}Owner;
+
+struct Client
+{
+    int intention;
+    int diningType;
+    string location;
+    int payment_method;
+    int visa_id;
+    string visa_user;
+}Customer;
+
+enum Stages
+{
+    start = 1,
+    customer_interface,
+    eat_type,
+    contact,
+    menu_user,
+    Final_Receipt,
+    paying,
+    owner,
+    success,
+    previous = -1,
+    endProgram = 0,
+};
+
+struct MenuItems
+{
+    string NameItem;
+    int Price;
+};
+
+struct Orders
+{
+    MenuItems item;
+    int quantity;
+};
+
+vector<Orders> selectedOrders;
+vector<MenuItems> menu = {{"Beef Burger",10},{"Chicken Burger",15}};
+vector<MenuItems> Sidemenu = {{"Fries",10},{"Cola",5}};
+
+// owner function
+MenuItems editor;
+
+void priceChange()
+{
+    clearScreen();
+    int j = 1; // range of menu
+    cout<<"****Main Menu****\n";
+    for(MenuItems i:menu)
+    {
+        cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+        j++;
+    }
+
+    cout<<"****Side Menu****\n";
+    for(MenuItems i:Sidemenu)
+    {
+        cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+        j++;
+    }
+
+    int item;
+    cout<<"Choose item to change price : ";
+    cin >> item;
+
+    cout<<"Enter new price : ";
+    cin >> editor.Price;
+
+    if(item > menu.size())
+    {
+        item -= menu.size();
+        Sidemenu.at(item-1).Price = editor.Price;
+    }
+    else
+    {   
+        menu.at(item-1).Price = editor.Price;
+    }
+}
+
+
+void Delete()
+{
+    clearScreen();
+    int j = 1; // range of menu
+    cout<<"****Main Menu****\n";
+    for(MenuItems i:menu)
+    {
+        cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+        j++;
+    }
+
+    cout<<"****Side Menu****\n";
+    for(MenuItems i:Sidemenu)
+    {
+        cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+        j++;
+    }
+
+    int vanish;
+    cout <<"Select item to delete : ";
+    cin >> vanish;
+
+    if(vanish > menu.size())
+    {
+        vanish -= menu.size();
+        Sidemenu.erase(Sidemenu.begin()+vanish-1);
+    }
+    else
+    {   
+        menu.erase(menu.begin()+vanish-1);
+    }
+
+
+}
+
+void add()
+{
+    clearScreen();
+    int type;
+    cout <<"Enter type of menu (1-main/2-side) : ";
+    cin >> type;
+    
+    cout<<"Enter item name : ";
+    cin.ignore();
+    getline(cin,editor.NameItem);
+
+    cout<<"Enter item price : ";
+    cin >> editor.Price;
+
+    if(type == 1)
+    {
+        menu.push_back(editor);
+    }
+    else if(type == 2)
+    {
+        Sidemenu.push_back(editor);
+    }
+    
+}
+
+
+int ownerInterface()
+{
+    clearScreen();
+
+    cout<<"Choose an option\n1-add\n2-delete\n3-change price\nselection : ";
+    cin >> Owner.intention;
+
+    switch(Owner.intention)
+    {
+        case 1:
+            add();
+            break;
+        case 2:
+            Delete();
+            break;
+        case 3:
+            priceChange();
+            break;
+    }
+
+    return start;
+}
+
+
+int login()
+{
+    clearScreen();
+    int count =0;
+
+    while(true)
+    {
+        bool stop = true;
+        while(true)
+        {
+            stop = true;
+            cout <<"Enter username : ";
+            cin >> Owner.userLog;
+
+            for(char c:Owner.userLog)
+            {
+                if(!isalpha(c))
+                {
+                    cout<<"Invalid input"<<endl<<endl;
+                    count++;
+                    cin.clear();
+                    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    stop = false;
+                    break;
+                }
+            }        
+
+            if(stop)
+                break;
+        }
+
+        cout<<"Enter password : ";
+
+        while(true)
+        {
+            if(count == 3)
+            {
+                return endProgram;
+            }
+            if(cin >> Owner.passwordLog)
+            {
+                break;
+            }
+            else
+            {
+                count++;
+                cin.clear();
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cout<<"Enter password again : ";
+            }
+                
+        }
+
+        if(Owner.passwordLog == 1234 && Owner.userLog == "admin")
+        {
+            return success;
+        }
+        else
+        {
+            cout<<"Wrong login"<<endl<<endl;
+            count++;
+        }
+
+        if(count >= 3)
+        {
+            return endProgram;
+        }
+    }
+
+}
+
+// user functions:
+
+
+int payment()
+{
+    clearScreen();
+
+    while(true)
+    {
+        cout<<"Choose payment method (1-visa/2-cash)\nselection : ";
+        cin >> Customer.payment_method;
+
+        if(Customer.payment_method != 1 || Customer.payment_method != 2 )
+        {
+            cout<<"Invalid input"<<endl;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    bool stop = true;
+
+    if(Customer.payment_method == 1)
+    {
+        int count=0;
+
+        while(true)
+        {
+            stop = true;
+            if(count == 3)
+            {
+                return endProgram;
+            }
+
+            cout<<"Enter your card user : ";
+            cin >> Customer.visa_user;
+       
+            for(char c:Customer.visa_user)
+            {
+                if(!isalpha(c))
+                {
+                    cout<<"Invalid input"<<endl<<endl;
+                    count++;
+                    cin.clear();
+                    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    stop = false;
+                    break;
+                }
+            }
+
+            if(stop)
+            {
+                break;
+            }
+
+        }
+        
+        cout<<"Enter your card password : ";
+        while(true)
+        {
+            if(count == 3)
+            {
+                return endProgram;
+            }
+            if(cin >> Customer.visa_id)
+            {
+                break;
+            }
+            else
+            {
+                count++;
+                cin.clear();
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cout<<"Enter your card password again : ";
+            }
+            
+        }
+        
+    }
+
+    return endProgram;
+}
+
+
+void printReceipt(float total,float tax)
+{
+    clearScreen();
+    cout<<" item Name    QTY   Price   Total"<<endl;
+    cout<<"-------------------------------------------"<<endl;
+    for(Orders i:selectedOrders)
+    {
+        cout << i.item.NameItem <<"   "<<i.quantity<<"      "<<i.item.Price<<"     "<<(i.quantity *i.item.Price)<<endl;
+    }
+    cout<<"-------------------------------------------"<<endl;
+
+
+    if(Customer.diningType == 1)
+    {
+        cout<<"Tax : "<<tax<<endl;
+        cout<<"Service : " << 20 <<endl;
+        cout<<"Total price : "<< (total+20) <<endl<<endl;
+    }
+    else if(Customer.diningType == 2)
+    {
+        cout<<"Tax : "<<tax<<endl;
+        cout<<"Delivery : " << 30 <<endl;
+        cout<<"Total price : "<< (total+30) <<endl;
+        cout <<"address : "<<Customer.location<<endl<<endl;
+    }
+    else
+    {
+        cout<<"Tax : "<<tax<<endl;
+        cout<<"Total price : "<< total <<endl<<endl;
+    }
+   
+}
+
+int Receipt()
+{
+    float total_cost = 0;
+    float tax;
+    for(Orders i:selectedOrders)
+    {
+        total_cost = total_cost + (i.item.Price *   i.quantity );
+    }
+    
+    tax = 14.0/100 * total_cost;
+    total_cost += tax;
+
+    
+    printReceipt(total_cost,tax);
+    
+
+    int confirmation;
+    cout <<"Confirm? (1-yes/2-no) : ";
+    cin >> confirmation;
+
+    if(confirmation == 1)
+    {
+        return paying;
+    }
+    else if(confirmation == 2)
+    {
+        selectedOrders.clear();
+        return menu_user;
+    }
+        
+    return Final_Receipt;
+}
+
+
+int j;
+int MenuScreen()
+{
+    
+    int more;
+    int counter = 0;
+
+    while(true)
+    {
+        j = 1; // range of menu
+        clearScreen();
+        cout<<"****Main Menu****\n";
+        for(MenuItems i:menu)
+        {
+            cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+            j++;
+        }
+
+        cout<<"****Side Menu****\n";
+        for(MenuItems i:Sidemenu)
+        {
+            cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+            j++;
+        }
+        
+        if(CustomerInput() == endProgram)
+        {
+            return endProgram;
+        }
+
+
+
+        while(counter !=3)
+        {
+            cout <<"Anything else?\n selection (1-yes / 2-no) : ";
+            cin >> more;      
+
+            if(more != 1 && more != 2 )
+            {
+                cin.clear();
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                counter++;     
+            }
+
+
+            if(more == 1)
+            {
+                break;
+            }
+            else if(more == 2)
+            {
+                return Final_Receipt;
+            }
+    
+        }
+       
+        if(counter == 3)
+        {
+            return endProgram;
+        }
+       
+    }
+}
+
+int CustomerInput()
+{
+    int orderNum;
+    int quantity;
+
+    int i=0;
+    for(;i<3;i++)
+    {
+        cout<<"\nSelection item number : ";
+        
+
+        if((cin >> orderNum))
+        {
+            if( orderNum > 0 && orderNum <= (j-1) )
+                break;
+            else {
+                cout <<"Invalid input"<<endl;
+                
+            }
+        }
+        else
+        {
+            cout <<"Invalid input"<<endl;
+            cin.clear();
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            
+        }
+        
+
+    }
+
+
+    if (i == 3)
+    {
+        return endProgram;
+    }
+
+    
+    int k=0;
+    for(;k<3;k++)
+    {
+          
+        cout<<"How many you want : ";
+
+        if((cin >> quantity))
+        {
+            if( quantity <= 5 && quantity > 0 )
+                break;
+            else {
+                cout <<"Invalid input"<<endl;
+                
+            }
+        }
+        else
+        {
+            cout <<"Invalid input"<<endl;
+            cin.clear();
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            
+        }
+        
+    }
+
+    if (k == 3)
+    {
+        return endProgram;
+    }
+   
+    if(orderNum > menu.size())
+    {
+        orderNum -= menu.size();
+        selectedOrders.push_back({Sidemenu.at(orderNum-1),quantity});
+    }
+    else
+    {   
+        selectedOrders.push_back({menu.at(orderNum-1),quantity});
+    }
+    
+    return 1;
+}
+
+
+
+int contactScreen()
+{
+    clearScreen();
+    int response;
+    cout<<"Our location is 25th street Maadi near the fountain\n";
+    cout<<"Our hotline 190452\n";
+
+    int count = 0;
+    while(true)
+    {
+        cout <<"Continue to order (1) or exit (0) : ";
+        if(cin >> response)
+        {
+            if(response == 1)
+                return eat_type;
+            if(response == 0)
+                return endProgram;
+
+            if(response != 1 && response != 0)
+            {
+                cout <<"Invalid input"<<endl;
+                count++; 
+            }
+        }
+        else
+        {
+            count++;
+            cout <<"Invalid input"<<endl;
+            cin.clear();
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+
+        if (count == 3)
+        {
+            return endProgram;
+        }
+    }
+    
+}
+
+
+int eatType()
+{
+    clearScreen();
+
+     cout << "How would you like to eat?\n"
+         <<"1-Restaurant\n"
+         <<"2-Delivery\n"
+         <<"3-TakeAway\n"
+         <<"4-Go back\n";
+         
+
+    int count = 0;
+    while(true)
+    {
+        cout <<"Selection : ";
+        if(cin >> Customer.diningType)
+        {
+            if(Customer.diningType == 2)
+            {
+                cout<<"Enter your address : ";
+                cin.ignore();
+                getline(cin,Customer.location);
+                break;
+            }
+
+            if(Customer.diningType == 4)
+            {
+                return previous;
+            } 
+
+            if(Customer.diningType == 3 || Customer.diningType == 1)
+            {
+                break; 
+            }
+        }
+        else
+        {
+            count++;
+            cout <<"Invalid input"<<endl<<endl;
+            cin.clear();
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+
+        if (count == 3)
+        {
+            return endProgram;
+        }
+    }
+   return menu_user;
+}
+
+int customerInterface()
+{
+    clearScreen();
+    cout << "Do you want to order or contact us?\n1-Order\n2-Contact\n3-Go back\nSelection : ";
+    cin >> Customer.intention;
+
+    if (Customer.intention == 1)
+    {
+        return eat_type;
+    }
+        
+
+    if (Customer.intention == 2) 
+    {
+        return contact;
+    }
+
+    if (Customer.intention == 3) 
+    {
+        return previous;
+    }
+
+    return customer_interface;
+}
+
+int StartApp()
+{
+    clearScreen();
+    int typeOfUser;
+    cout << "================================\n";
+    cout << "   Welcome to our Restaurant\n";
+    cout << "================================\n";
+    cout << "\nPlease identify yourself.\n";
+    cout << "Select an option (1.Customer)-(2.Owner) : ";
+    cin >> typeOfUser;
+
+    if (typeOfUser == 1) return customer_interface;
+    if (typeOfUser == 2) return owner;
+    return start;
+}
+
+
+
+
+void direction()
+{
+    vector<int> historyStage;
+    int currentStage = start;
+    int callStage;
+
+    while(currentStage != endProgram)
+    {
+        switch(currentStage)
+        {
+            case start:
+                callStage = StartApp();
+                break;
+            case customer_interface:
+                callStage = customerInterface();
+                break;
+            case contact:
+                callStage = contactScreen();
+                break;
+            case eat_type:
+                callStage = eatType();
+                break;
+            case menu_user:
+                callStage = MenuScreen();
+                break;
+            case Final_Receipt:
+                callStage = Receipt();
+                break;
+            case paying:
+                callStage = payment();
+                break;
+            case owner:
+                callStage = login();
+                break;
+            case success:
+                callStage = ownerInterface();
+                break;
+            default:
+                callStage = endProgram;
+        }
+
+        if (callStage == previous)
+        {
+            currentStage = historyStage.back();
+            historyStage.pop_back();
+        }
+        else
+        {
+            historyStage.push_back(currentStage);
+            currentStage = callStage;
+        }
+    }
+
+    clearScreen();
+    cout<<"Thank you for using our service!!";
+}
+
+
+
+int main()
+{
+    direction();
+}
