@@ -3,6 +3,7 @@
 #include <string>   // getline
 #include <cctype> // for isaplha
 #include <limits>   // clear strings in int
+#include <conio.h> // *
 using namespace std;
 
 int CustomerInput();
@@ -14,7 +15,7 @@ void clearScreen()
 
 struct BigBoss
 {
-    int passwordLog;
+    string passwordLog;
     int intention;
     string userLog;
 }Owner;
@@ -62,6 +63,54 @@ vector<MenuItems> Sidemenu = {{"Fries",10},{"Cola",5}};
 
 // owner function
 MenuItems editor;
+
+string StarPassword()
+{
+    string result;
+    char character;
+
+    while ((character = _getch()) != '\r')   // Enter key
+    {
+        if (character == '\b')               // Backspace key
+        {
+            if (!result.empty())
+            {
+                result.pop_back();     // remove last char from the real string
+                cout << "\b \b";       // erase the last '*' on screen
+            }
+        }
+        else
+        {
+            result += character;              // store real char
+            cout << '*';               // show a star instead
+        }
+    }
+
+    cout << endl;
+    return result;
+}
+
+
+void menuOwnerShow()
+{
+    clearScreen();
+    int j = 1; // range of menu
+    cout<<"****Main Menu****\n";
+    for(MenuItems i:menu)
+    {
+        cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+        j++;
+    }
+
+    cout<<"****Side Menu****\n";
+    for(MenuItems i:Sidemenu)
+    {
+        cout<<j<<"-"<<i.NameItem<<" ........ "<<i.Price <<" L.E"<<endl;
+        j++;
+    }
+
+}
+
 
 void priceChange()
 {
@@ -163,45 +212,65 @@ void add()
 
 int ownerInterface()
 {
-    clearScreen();
-
-    cout<<"Choose an option\n1-add\n2-delete\n3-change price\nselection : ";
-    cin >> Owner.intention;
-
-    switch(Owner.intention)
+    while(true)
     {
-        case 1:
-            add();
-            break;
-        case 2:
-            Delete();
-            break;
-        case 3:
-            priceChange();
-            break;
-    }
+        clearScreen();
+        cout<<"Choose an option\n1-add\n2-delete\n3-change price\n4-show menu\n5-exit\nselection : ";
+        cin >> Owner.intention;
 
-    return start;
+        switch(Owner.intention)
+        {
+            case 1:
+                add();
+                break;
+            case 2:
+                Delete();
+                break;
+            case 3:
+                priceChange();
+                break;
+            case 4:
+                menuOwnerShow();
+                break;
+            case 5:
+                return start;
+                break;
+        }
+
+        int response;
+        cout<<"Exit? (1-yes/2-no) : ";
+        cin >> response;
+
+        if(response == 1)
+        {
+            return start;
+        }
+        else if(response == 2)
+        {
+            continue;
+        }
+    }
+    
+   
 }
 
 
 int login()
 {
     clearScreen();
-    int count =0;
-
+    int count = 0;
     while(true)
     {
-        bool stop = true;
+        
         while(true)
         {
-            stop = true;
+            bool stop = true;
             cout <<"Enter username : ";
             cin >> Owner.userLog;
 
             for(char c:Owner.userLog)
             {
-                if(!isalpha(c))
+                if(!isalpha(c)) // if string or number
                 {
                     cout<<"Invalid input"<<endl<<endl;
                     count++;
@@ -216,37 +285,31 @@ int login()
                 break;
         }
 
-        cout<<"Enter password : ";
+        
 
         while(true)
         {
+            cout<<"Enter password : ";
+
             if(count == 3)
             {
                 return endProgram;
             }
-            if(cin >> Owner.passwordLog)
+
+            Owner.passwordLog = StarPassword();
+            
+            if(Owner.passwordLog == "1234" && Owner.userLog == "admin")
             {
-                break;
+                return success;
             }
             else
             {
+                cout<<"Wrong login"<<endl<<endl;
                 count++;
-                cin.clear();
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                cout<<"Enter password again : ";
             }
                 
         }
 
-        if(Owner.passwordLog == 1234 && Owner.userLog == "admin")
-        {
-            return success;
-        }
-        else
-        {
-            cout<<"Wrong login"<<endl<<endl;
-            count++;
-        }
 
         if(count >= 3)
         {
@@ -268,10 +331,14 @@ int payment()
         cout<<"Choose payment method (1-visa/2-cash)\nselection : ";
         cin >> Customer.payment_method;
 
-        if(Customer.payment_method != 1 || Customer.payment_method != 2 )
+        if(Customer.payment_method > 2 )
         {
             cout<<"Invalid input"<<endl;
-        }
+        } 
+        else if(Customer.payment_method < 1 )
+        {
+            cout<<"Invalid input"<<endl;
+        }    
         else
         {
             break;
@@ -434,9 +501,16 @@ int MenuScreen()
             j++;
         }
         
-        if(CustomerInput() == endProgram)
+        cout<<"0 - Go back"<<endl;
+
+        int response = CustomerInput();
+        if(response == endProgram)
         {
             return endProgram;
+        }
+        else if(response == previous)
+        {
+            return previous;
         }
 
 
@@ -486,7 +560,7 @@ int CustomerInput()
 
         if((cin >> orderNum))
         {
-            if( orderNum > 0 && orderNum <= (j-1) )
+            if( orderNum >= 0 && orderNum <= (j-1) )
                 break;
             else {
                 cout <<"Invalid input"<<endl;
@@ -504,6 +578,10 @@ int CustomerInput()
 
     }
 
+    if(orderNum == 0)
+    {
+        return previous;
+    }
 
     if (i == 3)
     {
@@ -681,11 +759,18 @@ int StartApp()
     cout << "   Welcome to our Restaurant\n";
     cout << "================================\n";
     cout << "\nPlease identify yourself.\n";
-    cout << "Select an option (1.Customer)-(2.Owner) : ";
+    cout << "Select an option (1.Customer)-(2.Owner)-(3.Exit) : ";
     cin >> typeOfUser;
 
-    if (typeOfUser == 1) return customer_interface;
-    if (typeOfUser == 2) return owner;
+    if (typeOfUser == 1) 
+        return customer_interface;
+    if (typeOfUser == 2) 
+        return owner;
+    if (typeOfUser == 3) 
+        return endProgram;
+    
+    cin.clear();
+    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return start;
 }
 
@@ -748,8 +833,6 @@ void direction()
     clearScreen();
     cout<<"Thank you for using our service!!";
 }
-
-
 
 int main()
 {
